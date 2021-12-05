@@ -8,6 +8,10 @@ function App() {
   const [city, setCity] = useState("");
   const [weatherData, setWeatherData] = useState([{}]);
   const [weatherForecast, setWeatherForecast] = useState([{}]);
+  const [display, setdisplay] = useState(false);
+
+  const [lat, setLat] = useState();
+  const [long, setLong] = useState();
 
   const [rates, setRates] = React.useState(null);
   const [ratesBase, setRatesBase] = React.useState("");
@@ -30,7 +34,10 @@ function App() {
     };
     const getLocation = () => {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(getCoordinates);
+        navigator.geolocation.getCurrentPosition(function (position) {
+          setLat(position.coords.latitude);
+          setLong(position.coords.longitude);
+        });
       } else {
         alert("Geolocation is not supported by this browser.");
       }
@@ -47,23 +54,24 @@ function App() {
       componentIsMounted = false;
     };
   }, []);
-
+  //end of useEffect
   const getWeather = (event) => {
     if (event.key === "Enter") {
       fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=imperial&appid=24736b20dc42ab404b85e28218f4c732`
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=24736b20dc42ab404b85e28218f4c732`
       )
         .then((response) => response.json())
         .then((data) => {
           console.log("data", data);
           setWeatherData(data);
+          setdisplay(true);
         });
     }
   };
 
   const getWeatherForecast = () => {
     fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=24736b20dc42ab404b85e28218f4c732`
+      `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${long}&units=metric&exclude=current,minutely,hourly,alerts&appid=24736b20dc42ab404b85e28218f4c732`
     )
       .then((response) => response.json())
       .then((data) => {
@@ -74,13 +82,6 @@ function App() {
 
   console.log("weather", weatherData);
   console.log("weather Forecast", weatherForecast);
-  const [lat, setLat] = useState();
-  const [long, setLong] = useState();
-  const getCoordinates = (position) => {
-    console.log(position);
-    setLat(position.coords.latitude);
-    setLong(position.coords.longitude);
-  };
 
   const dateBuilder = (d) => {
     let months = [
@@ -136,27 +137,38 @@ function App() {
         onKeyPress={getWeather}
       />
 
-      {city && <GoogleMap lat={lat} long={long} city={city} />}
+      {display && <GoogleMap lat={lat} long={long} city={city} />}
       {weatherData.main && (
         <div>
           <div className="date">{dateBuilder(new Date())}</div>
+          <img
+            src={`http://openweathermap.org/img/w/${weatherData.weather[0].icon}.png`}
+          />
           <p>{weatherData.name}</p>
-          <p>{Math.round(weatherData.main.temp)}°F</p>
+          <p>{Math.round(weatherData.main.temp)}°C</p>
           <p>{weatherData.weather[0].main}</p>
         </div>
       )}
-      <button onClick={getWeatherForecast}>next days forecast</button>
-      {weatherForecast.list && (
-        <div>
-          <p>{Math.round(weatherForecast.list[11].main.temp)}°F</p>
-          <p>{weatherForecast.list[11].weather[0].main}</p>
-          <p>{Math.round(weatherForecast.list[19].main.temp)}°F</p>
-          <p>{weatherForecast.list[19].weather[0].main}</p>
-          <p>{Math.round(weatherForecast.list[27].main.temp)}°F</p>
-          <p>{weatherForecast.list[27].weather[0].main}</p>
-        </div>
+      {display && (
+        <button onClick={getWeatherForecast}>next days forecast</button>
       )}
-      {rates && city
+      {weatherForecast.daily &&
+        weatherForecast.daily.slice(0, 3).map((d) => (
+          <div>
+            <img
+              src={`http://openweathermap.org/img/w/${d.weather[0].icon}.png`}
+              alt={d.weather[0].main}
+            />
+            <div>
+              <p>
+                {" "}
+                {d.temp.max} / {d.temp.min}°C
+              </p>
+            </div>
+          </div>
+        ))}
+
+      {rates && display
         ? Object.keys(rates).map(
             (key) =>
               (key.includes("EUR") || key.includes("USD")) && (
