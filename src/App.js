@@ -2,10 +2,9 @@ import "./App.css";
 import React, { useState, useEffect } from "react";
 import FxItem from "./FxItem";
 import fetchExchangeRates from "./service.js";
+import GoogleMap from "./GoogleMap.js";
 
 function App() {
-  const API_KEY = "AIzaSyAG_LJJgemnB-1rcZNbnR8cYeXuhUe2pGs";
-  const apikey = "24736b20dc42ab404b85e28218f4c732";
   const [city, setCity] = useState("");
   const [weatherData, setWeatherData] = useState([{}]);
   const [weatherForecast, setWeatherForecast] = useState([{}]);
@@ -29,8 +28,16 @@ function App() {
           console.log(err);
         });
     };
+    const getLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(getCoordinates);
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    };
 
     // load initially
+    getLocation();
     getFxData();
 
     const fetchInterval = setInterval(getFxData, 1000 * 60);
@@ -64,13 +71,6 @@ function App() {
         setWeatherForecast(data);
       });
   };
-  // const fetchExchangeRates = () => {
-  //   fetch("https://api.exchangerate.host/latest?base=INR")
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       console.log("exchange rates", data);
-  //     });
-  // };
 
   console.log("weather", weatherData);
   console.log("weather Forecast", weatherForecast);
@@ -82,13 +82,6 @@ function App() {
     setLong(position.coords.longitude);
   };
 
-  const getLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(getCoordinates);
-    } else {
-      alert("Geolocation is not supported by this browser.");
-    }
-  };
   const dateBuilder = (d) => {
     let months = [
       "January",
@@ -133,8 +126,6 @@ function App() {
 
   return (
     <div className="App">
-      {getLocation()}
-
       <h1> google maps integration</h1>
 
       <input
@@ -145,16 +136,7 @@ function App() {
         onKeyPress={getWeather}
       />
 
-      {city && (
-        <iframe
-          width="600"
-          height="450"
-          loading="lazy"
-          allowfullscreen
-          src={`https://www.google.com/maps/embed/v1/place?key=${API_KEY}&q=${city}&center=${lat},${long}
-        `}
-        ></iframe>
-      )}
+      {city && <GoogleMap lat={lat} long={long} city={city} />}
       {weatherData.main && (
         <div>
           <div className="date">{dateBuilder(new Date())}</div>
@@ -174,7 +156,7 @@ function App() {
           <p>{weatherForecast.list[27].weather[0].main}</p>
         </div>
       )}
-      {rates
+      {rates && city
         ? Object.keys(rates).map(
             (key) =>
               (key.includes("EUR") || key.includes("USD")) && (
