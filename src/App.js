@@ -127,60 +127,83 @@ function App() {
 
   return (
     <div className="App">
-      <h1> google maps integration</h1>
+      <h1 style={{ fontSize: "45px" }}> Get to know your City</h1>
 
       <input
         className="input"
-        placeholder="Enter City..."
+        placeholder="Enter your City..."
         onChange={(e) => setCity(e.target.value)}
         value={city}
         onKeyPress={getWeather}
       />
-
-      {display && <GoogleMap lat={lat} long={long} city={city} />}
-      {weatherData.main && (
-        <div>
-          <div className="date">{dateBuilder(new Date())}</div>
-          <img
-            src={`http://openweathermap.org/img/w/${weatherData.weather[0].icon}.png`}
-          />
-          <p>{weatherData.name}</p>
-          <p>{Math.round(weatherData.main.temp)}°C</p>
-          <p>{weatherData.weather[0].main}</p>
-        </div>
-      )}
-      {display && (
-        <button onClick={getWeatherForecast}>next days forecast</button>
-      )}
-      {weatherForecast.daily &&
-        weatherForecast.daily.slice(0, 3).map((d) => (
-          <div>
-            <img
-              src={`http://openweathermap.org/img/w/${d.weather[0].icon}.png`}
-              alt={d.weather[0].main}
-            />
+      <div className="content">
+        <div className="weather">
+          {weatherData.main && (
             <div>
-              <p>
-                {" "}
-                {d.temp.max} / {d.temp.min}°C
-              </p>
-            </div>
-          </div>
-        ))}
+              <div className="date">
+                <h1>{dateBuilder(new Date())}</h1>
+              </div>
+              <h2>{weatherData.name}</h2>
+              <img
+                src={`http://openweathermap.org/img/w/${weatherData.weather[0].icon}.png`}
+              />
 
-      {rates && display
-        ? Object.keys(rates).map(
-            (key) =>
-              (key.includes("EUR") || key.includes("USD")) && (
-                <FxItem
-                  key={key}
-                  fxSymbol={key}
-                  fxRate={rates[key]}
-                  ratesBase={ratesBase}
+              <h3>
+                {Math.round(weatherData.main.temp)}°C{" "}
+                {weatherData.weather[0].main}
+              </h3>
+            </div>
+          )}
+          {display && (
+            <button
+              className="buttonNext"
+              style={{ backgroundColor: "#00ffff" }}
+              onClick={getWeatherForecast}
+            >
+              Next days forecast
+            </button>
+          )}
+          {weatherForecast.daily &&
+            weatherForecast.daily.slice(0, 3).map((d) => (
+              <div className="forecast">
+                <img
+                  style={{ marginRight: "120px" }}
+                  src={`http://openweathermap.org/img/w/${d.weather[0].icon}.png`}
+                  alt={d.weather[0].main}
                 />
+                <div>
+                  <h4>
+                    {" "}
+                    {d.temp.max} / {d.temp.min}°C
+                  </h4>
+                </div>
+              </div>
+            ))}
+        </div>
+        <div className="mapAndCurrency">
+          {display && <GoogleMap lat={lat} long={long} city={city} />}
+          {display && (
+            <div className="CurrencyPrice">
+              <h2>Currency</h2>
+
+              <h2>Price</h2>
+            </div>
+          )}
+          {rates && display
+            ? Object.keys(rates).map(
+                (key) =>
+                  (key.includes("EUR") || key.includes("USD")) && (
+                    <FxItem
+                      key={key}
+                      fxSymbol={key}
+                      fxRate={rates[key]}
+                      ratesBase={ratesBase}
+                    />
+                  )
               )
-          )
-        : []}
+            : []}
+        </div>
+      </div>
     </div>
   );
 }
